@@ -1,491 +1,235 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Album Art Generator</title>
-    
-    <!-- Load Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Load custom fonts for the album art -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;700;900&family=Permanent+Marker&family=Righteous&display=swap" rel="stylesheet">
-    
-    <style>
-        /* Custom scrollbar and base aesthetics */
-        body {
-            background-color: #111827;
-            color: #f3f4f6;
-            font-family: 'Montserrat', sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-        
-        .glass-panel {
-            background: rgba(31, 41, 55, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M.K. Iron · Album Art Creator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#151615;color:#faf6e9;font:16px system-ui,sans-serif}header,main{max-width:1080px;margin:auto;padding:22px clamp(16px,4vw,48px)}header{display:flex;align-items:center;gap:12px;border-bottom:1px solid #42433e;font-weight:800}header i{width:36px;height:36px;border-radius:50%;background:repeating-radial-gradient(#171817 0 2px,#aca996 3px 4px);border:8px solid #cc6045}header small{margin-left:auto;font:12px monospace;color:#c2c2af}h1{font:normal clamp(36px,5vw,62px)/1.05 Georgia,serif;letter-spacing:-.055em;margin:10px 0 25px}.desk{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr);gap:clamp(20px,4vw,44px)}figure{margin:0}canvas{width:100%;height:auto;display:block;box-shadow:0 12px 35px #0006}figcaption{font:12px monospace;color:#c2c2af;margin:14px 0}fieldset,details{border:0;border-top:1px solid #54544a;margin:0 0 18px;padding:12px 0 0}legend,summary{font-weight:700;font-size:18px;padding-right:10px}label{display:block;color:#d4d2c4;font-size:14px;margin:8px 0}input,select,button,textarea{font:inherit;color:inherit;background:#262824;border:1px solid #585a50;border-radius:5px;padding:9px;width:100%;min-height:42px}button,summary,select{cursor:pointer}button:hover{border-color:#ff966e}button:disabled{opacity:.55;cursor:default}.row{display:flex;gap:12px}.row>*{flex:1;min-width:0}.export{background:#ff966e;color:#1c1b18;border:0;font-weight:800;margin-top:8px}p{color:#d4d2c4;font-size:14px}#status{min-height:1.2em}input[type=color]{padding:4px}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffa979}textarea{resize:vertical}@media(max-width:680px){.desk{grid-template-columns:1fr}main{padding-top:12px}canvas{max-width:min(100%,52vh);margin:auto}figcaption{text-align:center}}
 
-        /* Input styling overrides */
-        input[type="text"], textarea, select {
-            background: rgba(17, 24, 39, 0.8);
-            border: 1px solid rgba(75, 85, 99, 0.6);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        input[type="text"]:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-        }
-        
-        /* Canvas container aspect ratio lock */
-        .canvas-container {
-            width: 100%;
-            max-width: 600px;
-            aspect-ratio: 1 / 1;
-            margin: 0 auto;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-        }
-        
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+body{background:#eae7df;color:#262720}header{border-color:#b7b3a8}header small,figcaption{color:#52554a}h1{font-weight:600;margin:8px 0 22px}.desk{align-items:start}figure{background:#d6d2c8;padding:clamp(12px,2.5vw,28px);border:1px solid #bcb8ac}figcaption{margin-bottom:0}section{background:#222520;color:#f4f0e5;padding:22px;border-radius:8px}.looks{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.looks button{padding:4px;font-size:12px;text-align:left;overflow:hidden;background:#30342e}.looks button[aria-pressed=true]{outline:2px solid #ff966e}.looks img{display:block;width:100%;aspect-ratio:1.5;object-fit:cover;margin-bottom:4px}input[type=range]{padding:0;accent-color:#ff966e}.filebtn{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid #585a50;border-radius:5px;font-size:15px;color:inherit;cursor:pointer;margin:0}.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}.filebtn:focus-within{outline:2px solid #ff966e}[hidden]{display:none!important}#status{margin:8px 0 0}.project{margin-top:13px}#crop{margin-top:8px}.panelnote{font:12px monospace;color:#bfc5b7;margin:6px 0}@media(min-width:681px){figure{position:sticky;top:16px}}@media(max-width:680px){main{padding:12px}section{padding:15px}.desk{gap:12px}figure{padding:12px}header{padding:12px 16px}}
 
-        /* Loading spinner */
-        .loader {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid #fff;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body class="min-h-screen p-4 md:p-8">
-
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2 tracking-tight">Artifex</h1>
-            <p class="text-gray-400 text-sm md:text-base">AI & Gallery Album Art Generator</p>
-        </header>
-
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <!-- Left Column: Controls (Order 2 on mobile, 1 on desktop) -->
-            <div class="lg:col-span-5 space-y-6 order-2 lg:order-1">
-                
-                <!-- Text Data Section -->
-                <div class="glass-panel p-6 rounded-2xl">
-                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        Typography
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Band / Artist Name</label>
-                            <input type="text" id="band-name" placeholder="e.g. Mike Knotts & The State Line" class="w-full p-3 rounded-lg text-sm" oninput="drawCanvas()">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Song / Album Name</label>
-                            <input type="text" id="song-name" placeholder="Enter song name..." class="w-full p-3 rounded-lg text-sm" oninput="drawCanvas()">
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">Font Style</label>
-                                <select id="font-select" class="w-full p-3 rounded-lg text-sm" onchange="drawCanvas()">
-                                    <option value="Montserrat">Modern (Montserrat)</option>
-                                    <option value="Cinzel">Classic (Cinzel)</option>
-                                    <option value="Permanent Marker">Grungy (Marker)</option>
-                                    <option value="Righteous">Retro (Righteous)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">Text Color</label>
-                                <div class="flex items-center gap-2 p-1 bg-gray-800 rounded-lg border border-gray-600 h-[46px]">
-                                    <input type="color" id="text-color" value="#ffffff" class="w-full h-full rounded cursor-pointer border-0 bg-transparent p-0 m-0" oninput="drawCanvas()">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Image Source Section (Tabs) -->
-                <div class="glass-panel p-6 rounded-2xl">
-                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        Cover Art Source
-                    </h2>
-                    
-                    <!-- Tab Headers -->
-                    <div class="flex bg-gray-800 rounded-lg p-1 mb-4">
-                        <button id="tab-upload" class="flex-1 py-2 text-sm font-semibold rounded-md bg-gray-700 text-white shadow transition-all" onclick="switchTab('upload')">Gallery</button>
-                        <button id="tab-ai" class="flex-1 py-2 text-sm font-semibold rounded-md text-gray-400 hover:text-white transition-all" onclick="switchTab('ai')">AI Generator</button>
-                    </div>
-
-                    <!-- Upload Tab Content -->
-                    <div id="content-upload" class="block animate-fade-in">
-                        <label class="block text-sm text-gray-400 mb-2">Upload from Device</label>
-                        <div class="relative w-full h-32 border-2 border-dashed border-gray-600 rounded-lg hover:border-blue-400 transition-colors flex flex-col items-center justify-center cursor-pointer group bg-gray-800/50">
-                            <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-400 mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            <span class="text-sm text-gray-400 group-hover:text-blue-400 transition-colors">Tap to select photo</span>
-                            <!-- Hidden input, triggered by clicking the parent label/div -->
-                            <input type="file" id="image-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleImageUpload(event)">
-                        </div>
-                    </div>
-
-                    <!-- AI Generator Tab Content -->
-                    <div id="content-ai" class="hidden animate-fade-in">
-                        <label class="block text-sm text-gray-400 mb-2">Describe your album cover</label>
-                        <textarea id="ai-prompt" rows="3" placeholder="e.g. A neon glowing skull in a dark desert, retro synthwave style..." class="w-full p-3 rounded-lg text-sm mb-3 resize-none"></textarea>
-                        
-                        <button id="generate-btn" class="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold rounded-lg shadow-lg transform transition-all active:scale-95 flex justify-center items-center" onclick="generateAIImage()">
-                            <span id="generate-text">Generate AI Image</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Custom Message Box for Errors/Info -->
-                <div id="message-box" class="hidden p-4 rounded-lg bg-red-900/50 border border-red-500 text-red-200 text-sm">
-                    <!-- Message content goes here -->
-                </div>
-
-            </div>
-
-            <!-- Right Column: Preview & Download (Order 1 on mobile, 2 on desktop) -->
-            <div class="lg:col-span-7 flex flex-col items-center order-1 lg:order-2">
-                
-                <div class="w-full bg-gray-800/30 p-2 rounded-xl border border-gray-700 backdrop-blur-sm mb-6">
-                    <div class="flex justify-between items-center px-4 py-2 border-b border-gray-700/50 mb-4">
-                        <span class="text-sm font-semibold text-gray-300">Live Preview</span>
-                        <span class="text-xs text-gray-500">1080 x 1080px</span>
-                    </div>
-                    
-                    <!-- Canvas Container -->
-                    <div class="canvas-container relative bg-black">
-                        <!-- The high-res canvas (scaled down by CSS for view) -->
-                        <canvas id="art-canvas" width="1080" height="1080"></canvas>
-                        
-                        <!-- Overlay loading state specifically for the canvas -->
-                        <div id="canvas-overlay" class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center hidden backdrop-blur-sm z-10">
-                            <div class="loader mb-3 w-10 h-10 border-4 border-t-purple-500"></div>
-                            <span class="text-purple-400 font-semibold tracking-wider">Dreaming up artwork...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="download-btn" class="w-full max-w-md py-4 bg-white text-gray-900 hover:bg-gray-200 font-bold rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.2)] transform transition-all active:scale-95 flex justify-center items-center gap-2" onclick="downloadArt()">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Download Masterpiece
-                </button>
-                
-            </div>
-        </div>
-    </div>
-
-    <!-- Application Logic -->
-    <script>
-        // --- State and Constants ---
-        const canvas = document.getElementById('art-canvas');
-        const ctx = canvas.getContext('2d');
-        const CANVAS_SIZE = 1080;
-        let baseImage = null; // Stores the HTMLImageElement of the background
-        
-        // Use Gemini 3.1 Flash Image model for generating album art (as per guidelines for high fidelity images)
-        const GEMINI_API_KEY = ""; // Provided automatically by the runtime environment
-        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${GEMINI_API_KEY}`;
-
-        // Wait for fonts to load before initial draw to prevent flash of unstyled text
-        document.fonts.ready.then(() => {
-            drawCanvas();
-        });
-
-        // --- UI Interactions ---
-
-        function switchTab(tabId) {
-            const upTab = document.getElementById('tab-upload');
-            const aiTab = document.getElementById('tab-ai');
-            const upContent = document.getElementById('content-upload');
-            const aiContent = document.getElementById('content-ai');
-
-            if (tabId === 'upload') {
-                upTab.className = "flex-1 py-2 text-sm font-semibold rounded-md bg-gray-700 text-white shadow transition-all";
-                aiTab.className = "flex-1 py-2 text-sm font-semibold rounded-md text-gray-400 hover:text-white transition-all";
-                upContent.classList.remove('hidden');
-                aiContent.classList.add('hidden');
-            } else {
-                aiTab.className = "flex-1 py-2 text-sm font-semibold rounded-md bg-gray-700 text-white shadow transition-all";
-                upTab.className = "flex-1 py-2 text-sm font-semibold rounded-md text-gray-400 hover:text-white transition-all";
-                aiContent.classList.remove('hidden');
-                upContent.classList.add('hidden');
-            }
-        }
-
-        function showMessage(msg, isError = false) {
-            const msgBox = document.getElementById('message-box');
-            msgBox.textContent = msg;
-            msgBox.className = `p-4 rounded-lg text-sm mb-4 ${isError ? 'bg-red-900/50 border border-red-500 text-red-200' : 'bg-blue-900/50 border border-blue-500 text-blue-200'}`;
-            msgBox.classList.remove('hidden');
-            
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                msgBox.classList.add('hidden');
-            }, 5000);
-        }
-
-        // --- File Upload Logic ---
-
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    baseImage = img;
-                    drawCanvas();
-                }
-                img.src = e.target.result;
-            }
-            reader.readAsDataURL(file);
-        }
-
-        // --- AI Generation Logic (Gemini API) ---
-
-        async function generateAIImage() {
-            const prompt = document.getElementById('ai-prompt').value.trim();
-            if (!prompt) {
-                showMessage("Please enter a description for the AI.", true);
-                return;
-            }
-
-            // Update UI for loading state
-            const btn = document.getElementById('generate-btn');
-            const btnText = document.getElementById('generate-text');
-            const overlay = document.getElementById('canvas-overlay');
-            
-            btn.disabled = true;
-            btnText.innerHTML = '<span class="loader"></span> Generating...';
-            overlay.classList.remove('hidden');
-
-            const payload = {
-                contents: [{
-                    role: 'user',
-                    parts: [{ text: `Generate high quality, stylized album cover art without any text on the image. Subject: ${prompt}. Cinematic lighting, highly detailed, visually striking.` }]
-                }],
-                generationConfig: {
-                    responseModalities: ['IMAGE'],
-                    imageConfig: { aspectRatio: "1:1" }
-                }
-            };
-
-            try {
-                // Implementation includes exponential backoff retry logic as recommended
-                let response = null;
-                let retries = 0;
-                let maxRetries = 3;
-                let delay = 1000;
-
-                while (retries < maxRetries) {
-                    response = await fetch(GEMINI_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) break;
-                    if (response.status === 429) {
-                        retries++;
-                        await new Promise(r => setTimeout(r, delay));
-                        delay *= 2;
-                    } else {
-                        throw new Error(`API Error: ${response.status}`);
-                    }
-                }
-
-                if (!response || !response.ok) {
-                    throw new Error("Failed to generate image after retries.");
-                }
-
-                const result = await response.json();
-                const part = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                
-                if (part && part.inlineData) {
-                    const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-                    
-                    const img = new Image();
-                    img.onload = function() {
-                        baseImage = img;
-                        drawCanvas();
-                    }
-                    img.src = imageUrl;
-                    showMessage("Image generated successfully!");
-                } else {
-                    throw new Error("Invalid response format from AI.");
-                }
-
-            } catch (error) {
-                showMessage(error.message || "Failed to generate image. Please try again.", true);
-            } finally {
-                // Restore UI
-                btn.disabled = false;
-                btnText.innerHTML = 'Generate AI Image';
-                overlay.classList.add('hidden');
-            }
-        }
-
-        // --- Canvas Drawing Logic ---
-
-        function drawCanvas() {
-            // 1. Clear background
-            ctx.fillStyle = '#0f172a'; // dark slate
-            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-            // 2. Draw Base Image if exists (Center crop to 1:1 aspect ratio)
-            if (baseImage) {
-                const scale = Math.max(CANVAS_SIZE / baseImage.width, CANVAS_SIZE / baseImage.height);
-                const drawWidth = baseImage.width * scale;
-                const drawHeight = baseImage.height * scale;
-                const x = (CANVAS_SIZE - drawWidth) / 2;
-                const y = (CANVAS_SIZE - drawHeight) / 2;
-                
-                ctx.drawImage(baseImage, x, y, drawWidth, drawHeight);
-                
-                // Add a subtle gradient overlay to ensure text is readable
-                const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_SIZE);
-                gradient.addColorStop(0, 'rgba(0,0,0,0.4)');
-                gradient.addColorStop(0.3, 'rgba(0,0,0,0)');
-                gradient.addColorStop(0.7, 'rgba(0,0,0,0)');
-                gradient.addColorStop(1, 'rgba(0,0,0,0.6)');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-            } else {
-                // Default placeholder graphics if no image
-                const grad = ctx.createLinearGradient(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-                grad.addColorStop(0, '#312e81'); // indigo-900
-                grad.addColorStop(1, '#831843'); // pink-900
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-                
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.beginPath();
-                ctx.arc(CANVAS_SIZE/2, CANVAS_SIZE/2, 400, 0, Math.PI*2);
-                ctx.fill();
-            }
-
-            // 3. Draw Typography
-            const bandName = document.getElementById('band-name').value;
-            const songName = document.getElementById('song-name').value;
-            const fontFamily = document.getElementById('font-select').value;
-            const textColor = document.getElementById('text-color').value;
-
-            ctx.fillStyle = textColor;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Text Shadow for readability against busy backgrounds
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 4;
-
-            // Draw Band Name (Top area)
-            if (bandName) {
-                // Adjust font size based on string length to roughly fit
-                let bandSize = 60;
-                if (bandName.length > 20) bandSize = 45;
-                if (bandName.length > 30) bandSize = 35;
-                
-                ctx.font = `${fontFamily === 'Montserrat' ? '900' : 'bold'} ${bandSize}px '${fontFamily}'`;
-                ctx.fillText(bandName.toUpperCase(), CANVAS_SIZE / 2, 120);
-                
-                // Optional: Draw a thin line under band name
-                ctx.shadowBlur = 0; // turn off shadow for line
-                ctx.strokeStyle = textColor;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(CANVAS_SIZE/2 - 100, 160);
-                ctx.lineTo(CANVAS_SIZE/2 + 100, 160);
-                ctx.stroke();
-                // restore shadow
-                ctx.shadowBlur = 15; 
-            }
-
-            // Draw Song Name (Bottom area)
-            if (songName) {
-                let songSize = 130;
-                if (songName.length > 10) songSize = 100;
-                if (songName.length > 15) songSize = 80;
-                if (songName.length > 25) songSize = 60;
-
-                ctx.font = `${fontFamily === 'Montserrat' ? '700' : 'bold'} ${songSize}px '${fontFamily}'`;
-                
-                // Word wrap logic for song title if it's too long
-                if (songName.length > 15 && songName.includes(' ')) {
-                    const words = songName.split(' ');
-                    const half = Math.ceil(words.length / 2);
-                    const line1 = words.slice(0, half).join(' ');
-                    const line2 = words.slice(half).join(' ');
-                    
-                    ctx.fillText(line1, CANVAS_SIZE / 2, CANVAS_SIZE - 220);
-                    ctx.fillText(line2, CANVAS_SIZE / 2, CANVAS_SIZE - 120);
-                } else {
-                    ctx.fillText(songName, CANVAS_SIZE / 2, CANVAS_SIZE - 150);
-                }
-            }
-
-            // Reset shadow to not affect next frame
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-        }
-
-        // --- Export / Download ---
-        
-        function downloadArt() {
-            // Get data URL from canvas
-            const dataURL = canvas.toDataURL('image/png');
-            
-            // Create a temporary link element
-            const link = document.createElement('a');
-            
-            // Format filename
-            let band = document.getElementById('band-name').value.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            let song = document.getElementById('song-name').value.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            let filename = 'album_art';
-            if (band || song) {
-                filename = `${band ? band : 'unknown'}_${song ? song : 'untitled'}_cover.png`;
-            } else {
-                filename += '.png';
-            }
-
-            link.download = filename;
-            link.href = dataURL;
-            
-            // Trigger download
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
-</body>
-</html>
+.proofbar{margin-top:14px;display:flex;align-items:center;gap:12px;text-align:left;color:#272824}
+#small-proof{flex:none;width:64px;height:64px;box-shadow:none;margin:0}
+.proofbar div{min-width:0}.proofbar strong,.proofbar span{display:block;overflow-wrap:anywhere}
+.proofbar strong{font:700 16px system-ui}.proofbar span{font:13px system-ui}
+.history{display:flex;gap:8px;margin:0 0 16px}.history button{min-height:38px;padding:5px}
+@media(max-width:680px){.proofbar{margin-top:8px}#small-proof{width:48px;height:48px}}
+</style>
+<header><i aria-hidden="true"></i>M.K. Iron <small>ARTWORK STUDIO</small></header>
+<main><h1>Album Art Creator</h1><div class="desk"><figure><canvas id="art-canvas" width="1080" height="1080" aria-label="Album cover preview"></canvas><figcaption><div class="proofbar"><canvas id="small-proof" width="64" height="64" aria-label="Thumbnail proof"></canvas><div><strong id="proof-title"></strong><span id="proof-artist"></span></div></div></figcaption></figure>
+<section aria-label="Cover controls"><div class="history"><button id="undo" disabled>↶ Undo</button><button id="redo" disabled>↷ Redo</button></div><fieldset><legend>Artwork</legend><div class="looks" id="looks" aria-label="Artwork presets"></div><label>Use your own artwork<input id="photo" type="file" accept="image/*"></label>
+<div id="crop" hidden><label>Photo zoom<input id="zoom" type="range" min="100" max="300" value="100"></label><div class="row"><label>Horizontal crop<input id="panX" type="range" min="0" max="100" value="50"></label><label>Vertical crop<input id="panY" type="range" min="0" max="100" value="50"></label></div></div></fieldset>
+<fieldset><legend>Lettering</legend><label>Composition<select id="layout"><option value="split">Artist above · title below</option><option value="stack">Lower-left stack</option><option value="center">Centered sleeve</option></select></label><label>Artist<input id="band-name" value="M.K. Iron" maxlength="120"></label><label>Release title<input id="song-name" value="After the Signal" maxlength="160"></label><div class="row"><label>Typeface<select id="font-select"><option value="Georgia">Editorial</option><option value="Arial">Modern</option><option value="monospace">Typewriter</option></select></label><label>Ink<input id="text-color" type="color" value="#fff2dc"></label></div></fieldset>
+<details><summary>Generate with AI</summary><p id="ai-info">For Gemini, launch the included local server with Mike’s API key. See START-HERE.txt.</p><label>Describe the artwork<textarea id="prompt" maxlength="1200" rows="2"></textarea></label><button id="generate" disabled>Generate artwork</button></details>
+<fieldset><legend>Export</legend><div class="row"><label>Resolution<select id="resolution"><option>3000</option><option>1080</option></select></label><label>Format<select id="format"><option>JPG</option><option>PNG</option></select></label></div>
+<button class="export" id="download">Download cover ↓</button></fieldset><div class="row project"><button id="save">Save project</button><label class="filebtn">Open project<input id="open" type="file" accept=".mkcover,application/json"></label></div><p id="status" role="status"></p></section></div></main>
+<script>
+const el = id => document.getElementById(id);
+const canvas = el('art-canvas'), size = 1080;
+const palettes = [
+  ['#351723','#ff8056','#ffcf8a','#321729'],
+  ['#0a192e','#549ca7','#c6efe0','#12223b'],
+  ['#55334c','#e4ad57','#fff0bb','#332d49']
+];
+let coverImage = null, revision = 0;
+function drawLandscape(ctx, theme) {
+  const [sky,horizon,sun,ground] = palettes[theme];
+  const gradient = ctx.createLinearGradient(0,0,0,size);
+  gradient.addColorStop(0,sky); gradient.addColorStop(.62,horizon); gradient.addColorStop(1,ground);
+  ctx.fillStyle = gradient; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle = sun; ctx.beginPath(); ctx.arc(660,443,190,0,2*Math.PI); ctx.fill();
+  for(let row=0;row<65;row++){
+    ctx.beginPath(); ctx.moveTo(-5,size+10);
+    for(let x=-5;x<=size+5;x+=5){
+      const t=x/size, phase=row*.027;
+      const ridge=72*Math.sin(t*8+phase)+36*Math.sin(t*16-phase)+15*Math.cos(t*24+phase);
+      ctx.lineTo(x,520+row*9+ridge+38*Math.sin(t*5+phase*2));
+    }
+    ctx.lineTo(size+5,size+10);ctx.closePath();ctx.fillStyle=ground;ctx.fill();
+    ctx.strokeStyle=horizon;ctx.lineWidth=1.6;ctx.stroke();
+  }
+}
+const looks=['Ember tide','Cold transmission','Golden hour','Night pressing','Red shift','Blue note'];
+let selected=3;
+const controls=['band-name','song-name','text-color','font-select','layout','zoom','panX','panY','resolution','format'];
+function drawGraphic(ctx,index){
+  if(index<3){drawLandscape(ctx,index);return;}
+  if(index===4){
+    ctx.fillStyle='#e9d5ad';ctx.fillRect(0,0,size,size);
+    ctx.save();ctx.translate(510,505);ctx.rotate(-.29);
+    for(let i=0;i<13;i++){
+      ctx.fillStyle=i%3===0?'#262722':'#b7422d';
+      ctx.fillRect(-760+i*41,-710+i*81,1170-i*38,54);
+    }
+    ctx.restore();return;
+  }
+  const blue=index===5;
+  ctx.fillStyle=blue?'#c3d6d1':'#d37848';ctx.fillRect(0,0,size,size);
+  const cx=blue?270:740,cy=blue?520:550;
+  ctx.save();ctx.translate(cx,cy);ctx.scale(1,blue?.75:1);
+  const radius=blue?495:538;
+  ctx.fillStyle=blue?'#193b58':'#252b28';ctx.beginPath();ctx.arc(0,0,radius,0,2*Math.PI);ctx.fill();
+  for(let r=120;r<radius;r+=6){
+    ctx.strokeStyle=blue?'#7096a3':'#808071';ctx.lineWidth=r%12?1.1:1.8;
+    ctx.beginPath();ctx.arc(0,0,r,-2.9+r*.0007,2.9+r*.0007);ctx.stroke();
+  }
+  ctx.fillStyle=blue?'#e8a14b':'#eab479';ctx.beginPath();ctx.arc(0,0,112,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#272824';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function render(target){
+  const ctx=target.getContext('2d');
+  ctx.save();ctx.scale(target.width/size,target.height/size);
+  if(coverImage){
+    const scale=Math.max(size/coverImage.width,size/coverImage.height)*Number(el('zoom').value)/100;
+    const w=coverImage.width*scale,h=coverImage.height*scale;
+    ctx.fillStyle='#222';ctx.fillRect(0,0,size,size);
+    ctx.drawImage(coverImage,(size-w)*el('panX').value/100,(size-h)*el('panY').value/100,w,h);
+  }else drawGraphic(ctx,selected);
+  const layout=el('layout').value;
+  const shade=ctx.createLinearGradient(0,0,0,size);
+  shade.addColorStop(0,'#0005');shade.addColorStop(.5,layout==='center'?'#0007':'#0000');shade.addColorStop(1,'#0009');
+  ctx.fillStyle=shade;ctx.fillRect(0,0,size,size);
+  ctx.fillStyle=el('text-color').value;ctx.textAlign=layout==='center'?'center':'left';
+  const x=layout==='center'?540:64;
+  function fit(text,initial,y,weight){
+    let px=initial;
+    do{ctx.font=weight+' '+px+'px '+el('font-select').value;px-=2;}while(px>20 && ctx.measureText(text).width>952);
+    ctx.fillText(text,x,y,952);
+  }
+  const artistY={split:116,stack:826,center:456};
+  fit(el('band-name').value.toUpperCase(),46,artistY[layout],'bold');
+  fit(el('song-name').value,116,layout==='center'?606:978,'normal');ctx.restore();
+}
+function updateCanvas(){
+  const thumb=el('small-proof');
+  el('proof-title').textContent=el('song-name').value || 'Untitled release';
+  el('proof-artist').textContent=el('band-name').value || 'Artist unspecified';
+  render(canvas);thumb.getContext('2d').drawImage(canvas,0,0,thumb.width,thumb.height);el('crop').hidden=!coverImage;
+  Array.from(el('looks').children).forEach((btn,i)=>btn.setAttribute('aria-pressed',String(!coverImage&&i===selected)));
+}
+function resetCrop(){el('zoom').value=100;el('panX').value=el('panY').value=50;}
+// Keep image references so typing does not duplicate large bitmaps.
+const historyStates=[];
+let historyIndex=-1;
+const encodedPhotos=new WeakMap();
+function settingsSnapshot(){
+  return Object.fromEntries(controls.map(id=>[id,el(id).value]));
+}
+function historyButtons(){
+  el('undo').disabled=historyIndex<=0;
+  el('redo').disabled=historyIndex===historyStates.length-1;
+}
+function checkpoint(){
+  const settings=settingsSnapshot(),current=historyStates[historyIndex];
+  if(current && current.image===coverImage && current.look===selected &&
+      controls.every(id=>current.settings[id]===settings[id]))return;
+  historyStates.splice(historyIndex+1);
+  historyStates.push({settings,image:coverImage,look:selected});
+  if(historyStates.length>25)historyStates.shift();
+  // Limit retained photo memory independently of the text edit count.
+  while(new Set(historyStates.map(state=>state.image).filter(Boolean)).size>3)historyStates.shift();
+  historyIndex=historyStates.length-1;
+  historyButtons();
+}
+function historyStep(delta){
+  const next=historyIndex+delta;
+  if(next<0 || next>=historyStates.length)return;
+  revision++;
+  historyIndex=next;
+  const state=historyStates[next];
+  for(const id of controls)el(id).value=state.settings[id];
+  coverImage=state.image;selected=state.look;
+  updateCanvas();historyButtons();
+  el('status').textContent=delta<0?'Edit undone.':'Edit restored.';
+}
+el('undo').onclick=()=>historyStep(-1);
+el('redo').onclick=()=>historyStep(1);
+looks.forEach((name,index)=>{
+  const btn=document.createElement('button'),thumb=document.createElement('canvas');
+  thumb.width=thumb.height=156;const ctx=thumb.getContext('2d');ctx.scale(156/size,156/size);drawGraphic(ctx,index);
+  const img=document.createElement('img');img.src=thumb.toDataURL();img.alt='';btn.append(img,name);
+  btn.onclick=()=>{revision++;coverImage=null;selected=index;resetCrop();updateCanvas();checkpoint();el('status').textContent='';};
+  el('looks').append(btn);
+});
+for(const id of controls){
+  el(id).oninput=updateCanvas;
+  el(id).onchange=checkpoint;
+}
+async function applyImage(url,version){
+  const img=new Image(); img.src=url; await img.decode();
+  if(version!==revision)return;
+  coverImage=img;resetCrop();updateCanvas();checkpoint();el('status').textContent='Artwork loaded.';
+}
+el('photo').onchange=async event=>{
+  const file=event.target.files[0];if(!file)return;
+  const version=++revision,url=URL.createObjectURL(file);
+  try{await applyImage(url,version);}
+  catch{if(version===revision)el('status').textContent='Could not open that photo. Try a JPG, PNG or WebP.';}
+  finally{URL.revokeObjectURL(url);event.target.value='';}
+};
+function filename(){
+  return [el('band-name').value,el('song-name').value].join(' ').trim().replace(/[^\p{L}\p{N}-]+/gu,'_').slice(0,110)||'cover';
+}
+function download(blob,extension){
+  const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename()+extension;
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),60000);
+}
+el('download').onclick=()=>{
+  const output=document.createElement('canvas');output.width=output.height=Number(el('resolution').value);
+  render(output);const jpg=el('format').value==='JPG';
+  output.toBlob(blob=>{
+    if(!blob){el('status').textContent='Export failed. Try 1080 px.';return;}
+    download(blob,jpg?'.jpg':'.png');el('status').textContent=output.width+' px cover exported.';
+  },jpg?'image/jpeg':'image/png',.96);
+};
+el('save').onclick=()=>{
+  let image=coverImage ? encodedPhotos.get(coverImage) : null;
+  if(coverImage && !image){
+    const photo=document.createElement('canvas'),scale=Math.min(1,3600/Math.max(coverImage.width,coverImage.height));
+    photo.width=Math.max(1,Math.round(coverImage.width*scale));photo.height=Math.max(1,Math.round(coverImage.height*scale));
+    const c=photo.getContext('2d');c.fillStyle='#222';c.fillRect(0,0,photo.width,photo.height);c.drawImage(coverImage,0,0,photo.width,photo.height);image=photo.toDataURL('image/jpeg',.96);encodedPhotos.set(coverImage,image);
+  }
+  const settings=Object.fromEntries(controls.map(id=>[id,el(id).value]));
+  download(new Blob([JSON.stringify({version:1,selected,settings,image})],{type:'application/json'}),'.mkcover');
+  el('status').textContent='Editable project exported.';
+};
+el('open').onchange=async event=>{
+  const file=event.target.files[0];if(!file)return;const version=++revision;
+  try{
+    if(file.size>32*1024*1024)throw Error();
+    const data=JSON.parse(await file.text());
+    if(data.version!==1||!Number.isInteger(data.selected)||!looks[data.selected])throw Error();
+    for(const id of controls){
+      const field=el(id),value=data.settings[id];
+      if(typeof value!=='string'||value.length>(field.maxLength>0 ? field.maxLength : 200))throw Error();
+      if(field.options && !Array.from(field.options).some(o=>o.value===value))throw Error();
+      if(field.type==='range' && (!/^\d+$/.test(value)||+value<+field.min||+value>+field.max))throw Error();
+      if(field.type==='color' && !/^#[0-9a-f]{6}$/i.test(value))throw Error();
+    }
+    let photo=null;
+    if(data.image!==null){
+      if(typeof data.image!=='string'||!data.image.startsWith('data:image/jpeg;base64,'))throw Error();
+      photo=new Image();photo.src=data.image;await photo.decode();encodedPhotos.set(photo,data.image);
+    }
+    if(version!==revision)return;
+    for(const id of controls)el(id).value=data.settings[id];
+    selected=data.selected;coverImage=photo;updateCanvas();checkpoint();el('status').textContent='Editable project opened.';
+  }catch{if(version===revision)el('status').textContent='Could not open that project. Choose a .mkcover file saved by this studio.';}
+  finally{event.target.value='';}
+};
+async function checkServer(){
+  if(!['localhost','127.0.0.1'].includes(location.hostname))return;
+  try{const data=await (await fetch('/api/status')).json();
+    if(data.ready){el('generate').disabled=false;el('ai-info').textContent='Your description will be sent to Gemini. Generated artwork replaces the background.';}
+  }catch{}
+}
+el('generate').onclick=async()=>{
+  const prompt=el('prompt').value.trim();if(!prompt){el('prompt').focus();return;}
+  const version=++revision;el('generate').disabled=true;el('status').textContent='Generating artwork…';
+  try{
+    const response=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const data=await response.json();if(!response.ok)throw Error(data.error||'Generation failed.');
+    await applyImage(data.image,version);
+  }catch(error){if(version===revision)el('status').textContent=error.message;}
+  finally{el('generate').disabled=false;}
+};
+updateCanvas();checkpoint();checkServer();
+</script></html>
